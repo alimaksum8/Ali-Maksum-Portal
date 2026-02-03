@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { PortalView, InvitationConfig } from './types';
 import { PortalCard } from './components/PortalCard';
@@ -8,7 +7,7 @@ import { generatePortalGreeting } from './services/geminiService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<PortalView>(PortalView.LANDING);
-  const [greeting, setGreeting] = useState<string>("Welcome to Ali Maksum Portal");
+  const [greeting, setGreeting] = useState<string>("Welcome back to Ali Maksum Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
   // Invitation Configuration State
@@ -66,7 +65,6 @@ const App: React.FC = () => {
 
   const handlePortalSwitch = async (targetView: PortalView) => {
     if (targetView === PortalView.LANDING) {
-      // Clear URL params when going back to landing
       const url = new URL(window.location.href);
       url.searchParams.delete('view');
       window.history.replaceState({}, '', url.toString());
@@ -96,7 +94,7 @@ const App: React.FC = () => {
       {/* Main Container */}
       <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
         
-        {/* Header Section - Hide if not in Landing view */}
+        {/* Header Section */}
         {view === PortalView.LANDING && (
           <div className="text-center mb-16 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
@@ -134,7 +132,7 @@ const App: React.FC = () => {
             
             <PortalCard
               title="UNDANGAN"
-              description="Akses undangan eksklusif dan konfirmasi kehadiran tamu."
+              description="Akses undangan eksklusif dan konfirmasi kehadiran tamu secara digital."
               icon={InvitationIcon}
               gradient="from-rose-600 to-orange-600"
               onClick={() => handlePortalSwitch(PortalView.INVITATION)}
@@ -155,7 +153,6 @@ const App: React.FC = () => {
         {/* Invitation View */}
         {view === PortalView.INVITATION && (
           <div className="flex flex-col items-center w-full animate-in fade-in duration-1000">
-            {/* Show Back to Portal only if not deep-linked */}
             {!(new URLSearchParams(window.location.search).get('view') === 'invitation') && (
               <button 
                 onClick={() => handlePortalSwitch(PortalView.LANDING)}

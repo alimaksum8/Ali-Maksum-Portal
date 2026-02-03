@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { InvitationConfig } from '../types';
 
@@ -21,7 +20,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   const handlePublish = async () => {
     setIsPublishing(true);
     try {
-      // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 2000));
       alert('Undangan berhasil dipublikasikan!');
     } catch (err) {
@@ -32,7 +30,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   };
 
   const handleDeleteAll = async (e: React.MouseEvent) => {
-    // Prevent event bubbling if necessary
     e.preventDefault();
     e.stopPropagation();
     
@@ -42,7 +39,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
 
     setIsDeleting(true);
     try {
-      // Simulate API call delay
       await new Promise(resolve => setTimeout(resolve, 800));
       
       onUpdate({
