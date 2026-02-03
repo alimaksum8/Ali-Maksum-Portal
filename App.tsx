@@ -48,7 +48,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Decorative SVG Icons
   const AdminIcon = (
     <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
@@ -75,13 +74,20 @@ const App: React.FC = () => {
       return;
     }
 
-    setIsLoadingGreeting(true);
+    // Set view dulu agar menu tidak hilang saat loading AI
     setView(targetView);
+    setIsLoadingGreeting(true);
     
-    const role = targetView === PortalView.ADMIN ? 'admin' : 'guest';
-    const newGreeting = await generatePortalGreeting(role);
-    setGreeting(newGreeting);
-    setIsLoadingGreeting(false);
+    try {
+      const role = targetView === PortalView.ADMIN ? 'admin' : 'guest';
+      const newGreeting = await generatePortalGreeting(role);
+      setGreeting(newGreeting);
+    } catch (err) {
+      console.error("Gagal memuat salam AI:", err);
+      setGreeting(targetView === PortalView.ADMIN ? "Selamat bekerja di Panel Admin." : "Selamat datang di Undangan Kami.");
+    } finally {
+      setIsLoadingGreeting(false);
+    }
   };
 
   return (
@@ -92,7 +98,6 @@ const App: React.FC = () => {
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-rose-600/10 blur-[120px]" />
       </div>
 
-      {/* Main Container */}
       <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
         
         {/* Header Section */}
@@ -168,7 +173,6 @@ const App: React.FC = () => {
         )}
       </main>
 
-      {/* Footer */}
       <footer className="relative z-10 p-8 text-center border-t border-white/5">
         <p className="text-slate-500 text-sm font-medium">
           &copy; 2025 Ali Maksum Digital Solutions • <span className="text-indigo-400/80">Pengalaman Premium</span>
