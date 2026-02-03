@@ -130,7 +130,7 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
         {/* Hero Section */}
         <div className="max-w-2xl mx-auto relative z-10 overflow-visible">
           <div className="animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-            <p className="text-yellow-200/70 text-sm md:text-base tracking-[0.4em] uppercase mb-4">The Wedding of</p>
+            <p className="text-yellow-200/70 text-sm md:text-base tracking-[0.4em] uppercase mb-4">Pernikahan Suci Dari</p>
             <div className="w-24 md:w-32 h-0.5 mx-auto mb-4" style={{ background: 'linear-gradient(90deg, transparent, #d4af37, transparent)' }} />
           </div>
 
@@ -155,7 +155,7 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
 
         {/* Countdown */}
         <div className="mb-16 mt-10 animate-fade-in-up max-w-3xl mx-auto relative z-20" style={{ animationDelay: '1s' }}>
-          <p className="text-yellow-200/60 text-xs md:text-sm tracking-[0.3em] uppercase mb-6">⏳ Hitung Mundur</p>
+          <p className="text-yellow-200/60 text-xs md:text-sm tracking-[0.3em] uppercase mb-6">⏳ Menuju Hari Bahagia</p>
           <div className="grid grid-cols-4 gap-3 md:gap-6 justify-center">
             {[
               { label: 'Hari', val: timeLeft.days },
@@ -182,14 +182,14 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
 
             <div className="space-y-6">
               <div className="relative py-6 px-6 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 hover:border-yellow-500/30 transition-colors group">
-                <p className="text-yellow-200/60 text-xs tracking-[0.2em] uppercase mb-2">📅 Tanggal</p>
-                <p className="font-display text-2xl text-yellow-100 group-hover:text-white transition-colors">{config.eventDateDisplay || "TBA"}</p>
+                <p className="text-yellow-200/60 text-xs tracking-[0.2em] uppercase mb-2">📅 Tanggal Acara</p>
+                <p className="font-display text-2xl text-yellow-100 group-hover:text-white transition-colors">{config.eventDateDisplay || "Akan Segera Dikabari"}</p>
               </div>
               
               <div className="relative py-6 px-6 bg-yellow-500/5 rounded-2xl border border-yellow-500/10 hover:border-yellow-500/30 transition-colors group">
-                <p className="text-yellow-200/60 text-xs tracking-[0.2em] uppercase mb-2">📍 Tempat</p>
-                <p className="font-display text-2xl text-yellow-100 group-hover:text-white transition-colors">{config.venueName || "TBA"}</p>
-                <p className="text-yellow-200/50 text-sm md:text-base mt-2 leading-relaxed">{config.venueAddress || "TBA"}</p>
+                <p className="text-yellow-200/60 text-xs tracking-[0.2em] uppercase mb-2">📍 Lokasi</p>
+                <p className="font-display text-2xl text-yellow-100 group-hover:text-white transition-colors">{config.venueName || "Lokasi Rahasia"}</p>
+                <p className="text-yellow-200/50 text-sm md:text-base mt-2 leading-relaxed">{config.venueAddress || "Detail lokasi akan diinformasikan kemudian."}</p>
               </div>
             </div>
           </div>
@@ -207,18 +207,18 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
                   {attendanceStatus === 'yes' && (
                     <div className="space-y-5 animate-in fade-in slide-in-from-top-4 duration-500">
                       <div className="text-left">
-                        <label className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-widest mb-2 block ml-1">Nama Tamu</label>
-                        <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Masukkan nama lengkap..." className="w-full px-5 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-yellow-500/50 text-yellow-100 outline-none transition-all placeholder:text-slate-600" />
+                        <label className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-widest mb-2 block ml-1">Nama Lengkap Anda</label>
+                        <input type="text" value={guestName} onChange={(e) => setGuestName(e.target.value)} placeholder="Masukkan nama Anda..." className="w-full px-5 py-4 rounded-xl bg-white/5 border border-white/10 focus:border-yellow-500/50 text-yellow-100 outline-none transition-all placeholder:text-slate-600" />
                       </div>
                       <div className="text-left">
-                        <label className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-widest mb-2 block ml-1">Jumlah Undangan</label>
+                        <label className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-widest mb-2 block ml-1">Jumlah Tamu</label>
                         <div className="flex items-center gap-4 bg-white/5 rounded-xl p-2 border border-white/5">
                           <button onClick={() => setGuestCount(Math.max(1, guestCount - 1))} className="w-12 h-12 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors text-xl font-bold">−</button>
                           <span className="flex-1 text-center font-display text-2xl text-yellow-100">{guestCount}</span>
                           <button onClick={() => setGuestCount(guestCount + 1)} className="w-12 h-12 rounded-lg bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30 transition-colors text-xl font-bold">+</button>
                         </div>
                       </div>
-                      <button onClick={handleConfirm} className="w-full text-slate-900 font-bold py-5 px-8 rounded-2xl animate-pulse-glow hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-yellow-500/10" style={{ background: 'linear-gradient(135deg, #d4af37 0%, #f4e4ba 100%)' }}> ✓ Konfirmasi Sekarang </button>
+                      <button onClick={handleConfirm} className="w-full text-slate-900 font-bold py-5 px-8 rounded-2xl animate-pulse-glow hover:scale-[1.01] active:scale-95 transition-all shadow-xl shadow-yellow-500/10" style={{ background: 'linear-gradient(135deg, #d4af37 0%, #f4e4ba 100%)' }}> ✓ Kirim Konfirmasi </button>
                     </div>
                   )}
                 </div>
@@ -227,9 +227,9 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
                   <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
                   </div>
-                  <h3 className="text-green-400 text-2xl font-bold mb-2">{attendanceStatus === 'no' ? 'Notifikasi Diterima' : 'Konfirmasi Berhasil!'}</h3>
-                  <p className="text-yellow-200/60 text-sm md:text-base leading-relaxed mb-8">{attendanceStatus === 'no' ? 'Kami sangat mengerti Anda tidak dapat hadir. Terima kasih atas kabar baiknya.' : 'Terima kasih telah mengonfirmasi kehadiran Anda. Sampai jumpa di hari bahagia kami!'}</p>
-                  <button onClick={resetForm} className="py-3 px-8 rounded-xl font-bold bg-white/5 border border-white/10 text-yellow-400 hover:bg-white/10 transition-all text-sm uppercase tracking-widest"> 🔄 Ubah Pilihan </button>
+                  <h3 className="text-green-400 text-2xl font-bold mb-2">{attendanceStatus === 'no' ? 'Notifikasi Terkirim' : 'Konfirmasi Berhasil!'}</h3>
+                  <p className="text-yellow-200/60 text-sm md:text-base leading-relaxed mb-8">{attendanceStatus === 'no' ? 'Terima kasih atas kabarnya. Kami menghargai perhatian Anda.' : 'Terima kasih telah mengonfirmasi kehadiran Anda. Sampai jumpa di hari bahagia kami!'}</p>
+                  <button onClick={resetForm} className="py-3 px-8 rounded-xl font-bold bg-white/5 border border-white/10 text-yellow-400 hover:bg-white/10 transition-all text-sm uppercase tracking-widest"> 🔄 Perbarui Konfirmasi </button>
                 </div>
               )}
             </div>
@@ -238,14 +238,14 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
 
         {/* Share Section */}
         <div className="mt-16 pt-12 border-t border-yellow-500/10 max-w-lg mx-auto animate-fade-in-up relative z-20" style={{ animationDelay: '1.8s' }}>
-          <p className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-[0.3em] mb-6">Bagikan Halaman Undangan</p>
+          <p className="text-yellow-200/40 text-[10px] uppercase font-bold tracking-[0.3em] mb-6">Bagikan Undangan Ini</p>
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-yellow-600 to-yellow-300 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
             <button onClick={handleShareLink} className="relative w-full flex items-center justify-center gap-4 px-10 py-5 rounded-full bg-slate-900 border border-yellow-500/30 text-yellow-100 hover:bg-slate-800 transition-all duration-300 active:scale-95">
               {showCopyStatus ? (
                  <span className="flex items-center gap-2 text-green-400 animate-in fade-in zoom-in-95 font-bold">
                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                   Tautan Web Tersalin!
+                   Link Berhasil Disalin!
                  </span>
               ) : (
                 <>

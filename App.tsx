@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { PortalView, InvitationConfig } from './types';
 import { PortalCard } from './components/PortalCard';
@@ -7,7 +8,7 @@ import { generatePortalGreeting } from './services/geminiService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<PortalView>(PortalView.LANDING);
-  const [greeting, setGreeting] = useState<string>("Welcome back to Ali Maksum Portal");
+  const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Ali Maksum Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
   // Invitation Configuration State
@@ -33,7 +34,7 @@ const App: React.FC = () => {
   }, []);
 
   const handleCreateNew = () => {
-    if (confirm('Mulai buat undangan baru? Data yang belum disimpan mungkin akan hilang.')) {
+    if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {
       setInvitationConfig({
         groomName: "",
         brideName: "",
@@ -70,7 +71,7 @@ const App: React.FC = () => {
       window.history.replaceState({}, '', url.toString());
       
       setView(targetView);
-      setGreeting("Welcome back to Ali Maksum Portal");
+      setGreeting("Selamat datang kembali di Ali Maksum Portal");
       return;
     }
 
@@ -99,7 +100,7 @@ const App: React.FC = () => {
           <div className="text-center mb-16 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
-              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">System Online</span>
+              <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Sistem Online</span>
             </div>
             
             <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight">
@@ -123,7 +124,7 @@ const App: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl items-center animate-in zoom-in-95 duration-500">
             <PortalCard
               title="Admin Dashboard"
-              description="Kelola konten undangan, analitik, dan konfigurasi portal."
+              description="Kelola konten undangan, analitik, dan konfigurasi portal secara efisien."
               icon={AdminIcon}
               gradient="from-indigo-600 to-blue-600"
               onClick={() => handlePortalSwitch(PortalView.ADMIN)}
@@ -159,7 +160,7 @@ const App: React.FC = () => {
                 className="mb-8 px-6 py-2 rounded-full glass-panel border-rose-500/30 text-rose-300 hover:bg-rose-500 hover:text-white transition-all text-sm font-bold flex items-center gap-2"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                BACK TO PORTAL
+                KEMBALI KE PORTAL
               </button>
             )}
             <InvitationPortal config={invitationConfig} />
@@ -170,7 +171,7 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="relative z-10 p-8 text-center border-t border-white/5">
         <p className="text-slate-500 text-sm font-medium">
-          &copy; 2025 Ali Maksum Digital Solutions • <span className="text-indigo-400/80">Premium Experience</span>
+          &copy; 2025 Ali Maksum Digital Solutions • <span className="text-indigo-400/80">Pengalaman Premium</span>
         </p>
       </footer>
     </div>

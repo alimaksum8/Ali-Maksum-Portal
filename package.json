@@ -3,12 +3,8 @@
   "name": "ali-maksum-portal",
   "version": "1.0.0",
   "private": true,
-  "dependencies": {
-    "react": "^19.2.4",
-    "react-dom": "^19.2.4",
-    "@google/genai": "^1.39.0"
-  },
   "scripts": {
-    "build": "echo 'Building Ali Maksum Portal... Static deployment ready.'"
+    "build": "mkdir -p dist && cp index.html dist/ && cp *.tsx dist/ || true",
+    "install": "echo 'Skipping heavy install for static ESM'"
   }
 }

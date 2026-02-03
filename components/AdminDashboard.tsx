@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { InvitationConfig } from '../types';
 
@@ -30,17 +31,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   };
 
   const handleDeleteAll = async (e: React.MouseEvent) => {
+    // Memastikan event tidak merambat ke elemen lain
     e.preventDefault();
     e.stopPropagation();
     
-    if (!window.confirm('Apakah Anda yakin ingin menghapus data undangan ini?')) {
+    if (!window.confirm('PERINGATAN: Apakah Anda yakin ingin menghapus SELURUH data undangan ini secara permanen?')) {
       return;
     }
 
     setIsDeleting(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 800));
+      // Simulasi proses penghapusan
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      // Mengirimkan objek kosong untuk mereset seluruh field di App.tsx
       onUpdate({
         groomName: "",
         brideName: "",
@@ -52,9 +56,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
         message: ""
       });
       
-      alert('Data undangan telah berhasil dihapus.');
+      alert('Sukses: Seluruh data undangan telah dibersihkan.');
     } catch (err) {
-      console.error("Delete failed:", err);
+      console.error("Gagal menghapus:", err);
+      alert('Terjadi kesalahan saat mencoba menghapus data.');
     } finally {
       setIsDeleting(false);
     }
@@ -64,7 +69,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const hasData = config.groomName.trim() !== "" || config.brideName.trim() !== "";
+  // Logika pengecekan ketersediaan data untuk ditampilkan di tabel
+  const hasData = config.groomName.trim() !== "" || config.brideName.trim() !== "" || config.venueName.trim() !== "";
 
   return (
     <div className="w-full max-w-6xl space-y-10">
@@ -72,7 +78,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
             <h2 className="text-4xl font-extrabold text-white tracking-tight">Editor Undangan</h2>
-            <p className="text-indigo-400 mt-1 font-medium italic">Konfigurasikan detail hari bahagia Anda.</p>
+            <p className="text-indigo-400 mt-1 font-medium italic">Atur detail hari bahagia Anda dengan mudah.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button 
@@ -80,14 +86,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
               className="px-6 py-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all font-bold flex items-center gap-2 group whitespace-nowrap"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              Buat Undangan Baru
+              Undangan Baru
             </button>
             <button 
               onClick={onBack}
               className="px-6 py-3 rounded-2xl glass-panel border-white/10 hover:bg-white hover:text-slate-950 transition-all font-bold flex items-center gap-2 group whitespace-nowrap"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" className="group-hover:-translate-x-1 transition-transform"><path d="m15 18-6-6 6-6"/></svg>
-              Kembali ke Portal
+              Kembali
             </button>
           </div>
         </div>
@@ -97,28 +103,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-indigo-500 rounded-full"></span>
-                Informasi Pasangan
+                Profil Pasangan
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Nama Mempelai Pria</label>
+                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Mempelai Pria</label>
                   <input 
                     name="groomName"
                     value={config.groomName}
                     onChange={handleChange}
                     type="text" 
-                    placeholder="Contoh: Ali"
+                    placeholder="Nama Mempelai Pria"
                     className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Nama Mempelai Wanita</label>
+                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Mempelai Wanita</label>
                   <input 
                     name="brideName"
                     value={config.brideName}
                     onChange={handleChange}
                     type="text" 
-                    placeholder="Contoh: Fatimah"
+                    placeholder="Nama Mempelai Wanita"
                     className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
@@ -128,12 +134,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-rose-500 rounded-full"></span>
-                Waktu & Lokasi
+                Waktu & Tempat
               </h3>
               <div className="space-y-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">ISO Date (Countdown)</label>
+                    <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Data ISO (Timer)</label>
                     <input 
                       name="eventDateIso"
                       value={config.eventDateIso}
@@ -143,7 +149,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Display Date</label>
+                    <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Format Tampilan</label>
                     <input 
                       name="eventDateDisplay"
                       value={config.eventDateDisplay}
@@ -155,13 +161,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Nama Tempat / Venue</label>
+                  <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Nama Venue</label>
                   <input 
                     name="venueName"
                     value={config.venueName}
                     onChange={handleChange}
                     type="text" 
-                    placeholder="Nama Gedung / Masjid"
+                    placeholder="Nama Gedung / Tempat Acara"
                     className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all"
                   />
                 </div>
@@ -172,7 +178,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                     value={config.venueAddress}
                     onChange={handleChange}
                     rows={2}
-                    placeholder="Alamat lengkap lokasi..."
+                    placeholder="Masukkan alamat lengkap lokasi..."
                     className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all resize-none"
                   />
                 </div>
@@ -184,7 +190,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <section className="bg-white/5 p-6 rounded-3xl border border-white/10">
               <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
                 <span className="w-1.5 h-6 bg-purple-500 rounded-full"></span>
-                Pesan Undangan
+                Pesan Khusus
               </h3>
               <div className="space-y-2">
                 <label className="text-xs uppercase tracking-widest text-slate-400 font-bold ml-1">Pesan Penutup</label>
@@ -193,7 +199,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                   value={config.message}
                   onChange={handleChange}
                   rows={4}
-                  placeholder="Doa dan harapan untuk tamu..."
+                  placeholder="Doa atau harapan bagi para tamu..."
                   className="w-full bg-slate-900/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-indigo-500 outline-none transition-all resize-none"
                 />
               </div>
@@ -203,9 +209,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#818cf8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
                </div>
-               <h4 className="text-xl font-bold text-white mb-2">Editor Mode Aktif</h4>
+               <h4 className="text-xl font-bold text-white mb-2">Sistem Siap Sinkronisasi</h4>
                <p className="text-slate-400 text-sm leading-relaxed">
-                 Data Anda akan langsung diperbarui ke sistem portal.
+                 Seluruh perubahan akan langsung tercermin pada portal undangan digital.
                </p>
             </div>
             
@@ -221,7 +227,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    Memproses...
+                    Sedang Mengirim...
                   </>
                 ) : 'Publikasikan Undangan'}
               </button>
@@ -233,7 +239,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
       <div className="glass-panel rounded-[2.5rem] p-8 md:p-10 animate-in fade-in slide-in-from-bottom-4 duration-700 delay-150">
         <div className="flex items-center gap-3 mb-8">
           <div className="w-2 h-8 bg-green-500 rounded-full" />
-          <h3 className="text-2xl font-bold text-white tracking-tight">Undangan Terdaftar</h3>
+          <h3 className="text-2xl font-bold text-white tracking-tight">Status Undangan Aktif</h3>
         </div>
 
         {!hasData ? (
@@ -241,7 +247,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-slate-500">
               <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
-            <p className="text-slate-400 font-medium">Belum ada data undangan yang aktif.</p>
+            <p className="text-slate-400 font-medium">Belum ada data undangan yang terdaftar di sistem.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -251,7 +257,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                   <th className="px-6 py-2">Nama Pasangan</th>
                   <th className="px-6 py-2">Waktu Acara</th>
                   <th className="px-6 py-2">Lokasi</th>
-                  <th className="px-6 py-2 text-right">Aksi</th>
+                  <th className="px-6 py-2 text-right">Tindakan</th>
                 </tr>
               </thead>
               <tbody>
@@ -276,24 +282,24 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                     <div className="flex items-center justify-end gap-3">
                       <button 
                         onClick={scrollToTop}
-                        className="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all"
-                        title="Edit Undangan"
+                        className="p-3 rounded-xl bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white transition-all shadow-sm"
+                        title="Edit Data"
                       >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                       </button>
                       <button 
                         onClick={handleDeleteAll}
                         disabled={isDeleting}
-                        className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50 cursor-pointer"
-                        title="Hapus Undangan"
+                        className="p-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                        title="Hapus Seluruh Data"
                       >
                         {isDeleting ? (
-                          <svg className="animate-spin h-[18px] w-[18px]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-[20px] w-[20px]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                         ) : (
-                          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                         )}
                       </button>
                     </div>
