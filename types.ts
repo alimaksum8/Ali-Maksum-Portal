@@ -5,9 +5,21 @@ export enum PortalView {
   INVITATION = 'INVITATION'
 }
 
+export interface RSVP {
+  id: string;
+  name: string;
+  count: number;
+  status: 'yes' | 'no';
+  timestamp: string;
+}
+
 export interface InvitationConfig {
-  groomName: string;
-  brideName: string;
+  line1: string;
+  line2: string;
+  line3: string;
+  line4: string;
+  showMuballigh: boolean;
+  muballighs: string[];
   eventDateIso: string;
   eventDateDisplay: string;
   eventTime: string;

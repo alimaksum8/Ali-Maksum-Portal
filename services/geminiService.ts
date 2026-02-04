@@ -8,7 +8,7 @@ export const generatePortalGreeting = async (role: 'admin' | 'guest'): Promise<s
   if (!apiKey || apiKey === "undefined" || apiKey.trim() === "") {
     console.warn("Gemini API_KEY belum dikonfigurasi. Menggunakan pesan standar.");
     return role === 'admin' 
-      ? "Selamat datang di panel kendali Ali Maksum Portal. Siap mengelola hari bahagia Anda?" 
+      ? "Selamat datang di panel kendali Darul Huda Portal. Siap mengelola hari bahagia Anda?" 
       : "Selamat datang! Suatu kehormatan bagi kami atas kunjungan Anda di portal undangan ini.";
   }
 
@@ -16,7 +16,7 @@ export const generatePortalGreeting = async (role: 'admin' | 'guest'): Promise<s
     const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Generate a short, sophisticated, and welcoming one-sentence greeting in Indonesian for a user entering the ${role} section of a premium wedding digital portal called 'Ali Maksum Portal'. Keep it professional yet warm and poetic.`,
+      contents: `Generate a short, sophisticated, and welcoming one-sentence greeting in Indonesian for a user entering the ${role} section of a premium digital portal called 'Darul Huda Portal'. Keep it professional yet warm and poetic.`,
       config: {
         temperature: 0.8,
         topP: 0.9,

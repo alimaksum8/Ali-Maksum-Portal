@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { InvitationConfig } from '../types';
+import { InvitationConfig, RSVP } from '../types';
 
 interface InvitationPortalProps {
   config: InvitationConfig;
@@ -12,7 +12,17 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   const [guestCount, setGuestCount] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
-  const [showCopyStatus, setShowCopyStatus] = useState(false);
+  
+  // Real RSVP State
+  const [allRsvps, setAllRsvps] = useState<RSVP[]>([]);
+
+  // Load RSVPs from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('darul_huda_rsvps');
+    if (saved) {
+      setAllRsvps(JSON.parse(saved));
+    }
+  }, []);
 
   // Countdown Logic
   useEffect(() => {
@@ -45,70 +55,75 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   }, [config.eventDateIso]);
 
   const handleConfirm = () => {
-    if (attendanceStatus === 'yes' && !guestName.trim()) {
-      alert("Mohon masukkan nama Anda");
-      return;
-    }
+    const status = attendanceStatus || 'no';
+    
+    const newRsvp: RSVP = {
+      id: Date.now().toString(),
+      name: guestName.trim() || (status === 'no' ? 'Seseorang' : 'Tamu Tanpa Nama'),
+      count: status === 'yes' ? guestCount : 0,
+      status: status,
+      timestamp: new Date().toISOString()
+    };
+
+    const updatedRsvps = [newRsvp, ...allRsvps];
+    setAllRsvps(updatedRsvps);
+    localStorage.setItem('darul_huda_rsvps', JSON.stringify(updatedRsvps));
     setIsSuccess(true);
   };
 
-  const handleShare = async () => {
-    const url = new URL(window.location.origin + window.location.pathname);
-    url.searchParams.set('view', 'invitation');
-    const shareUrl = url.toString();
+  // Calculate stats from real data
+  const totalConfirmedPeople = allRsvps
+    .filter(r => r.status === 'yes')
+    .reduce((sum, r) => sum + r.count, 0);
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Undangan Pernikahan ${config.groomName} & ${config.brideName}`,
-          url: shareUrl
-        });
-      } catch (err) { console.log(err); }
-    } else {
-      await navigator.clipboard.writeText(shareUrl);
-      setShowCopyStatus(true);
-      setTimeout(() => setShowCopyStatus(false), 3000);
-    }
-  };
+  const allGuestNames = allRsvps
+    .filter(r => r.status === 'yes')
+    .map(r => r.name);
 
   return (
     <div className="w-full max-w-md md:max-w-xl mx-auto font-serif relative overflow-hidden flex flex-col items-center">
       
-      {/* Floating Ornaments */}
-      <div className="absolute top-10 left-5 text-4xl animate-float opacity-60 pointer-events-none">🌸</div>
-      <div className="absolute top-20 right-8 text-3xl animate-float-reverse delay-500 opacity-50 pointer-events-none">✨</div>
-      <div className="absolute top-40 left-10 text-2xl animate-sparkle delay-1000 opacity-70 pointer-events-none">💫</div>
+      <div className="absolute top-10 left-5 text-4xl animate-float opacity-60 pointer-events-none">🕌</div>
+      <div className="absolute top-20 right-8 text-3xl animate-float-reverse delay-500 opacity-50 pointer-events-none">🌙</div>
+      <div className="absolute top-40 left-10 text-2xl animate-sparkle delay-1000 opacity-70 pointer-events-none">✨</div>
 
-      {/* Main Invitation Card */}
       <div className="w-full gold-border rounded-[2.5rem] card-shadow overflow-hidden relative mt-4" style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #16162a 100%)' }}>
         
-        {/* Top Decorative Border */}
         <div className="h-2 w-full" style={{ background: 'linear-gradient(90deg, transparent, #d4af37, #f4e4ba, #d4af37, transparent)' }} />
         
         <div className="p-8 md:p-12 text-center relative">
           
-          {/* Header */}
           <div className="animate-fade-in-up">
-            <p className="text-yellow-200/70 text-sm tracking-[0.3em] uppercase mb-2">The Wedding of</p>
+            <p className="text-yellow-200/70 text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em] uppercase mb-2 font-bold leading-relaxed px-4">
+              UNDANGAN DALAM RANGKA:
+            </p>
             <div className="w-24 h-0.5 mx-auto mb-10" style={{ background: 'linear-gradient(90deg, transparent, #d4af37, transparent)' }} />
           </div>
 
-          {/* Couple Names */}
-          <div className="mb-12">
-            <h1 className="font-script text-6xl md:text-7xl shimmer-text animate-fade-in-up delay-200 py-6 leading-normal">
-              {config.groomName || "Mempelai Pria"}
+          <div className="mb-12 space-y-4">
+            <h1 className="font-script text-3xl md:text-4xl shimmer-text animate-fade-in-up delay-200 py-1 leading-tight whitespace-nowrap overflow-hidden text-ellipsis px-2">
+              {config.line1 || "Judul Acara"}
             </h1>
-            <div className="my-2 animate-fade-in-up delay-400">
-              <span className="text-4xl animate-heartbeat inline-block">💕</span>
+            
+            <p className="font-display text-lg md:text-xl text-yellow-100/90 animate-fade-in-up delay-400 font-medium tracking-wide">
+              {config.line2}
+            </p>
+
+            <div className="py-2 animate-fade-in-up delay-600">
+               <div className="inline-block px-8 py-2 border-y border-yellow-500/20">
+                  <span className="text-3xl md:text-4xl font-bold tracking-[0.2em] text-yellow-500 font-display">
+                    {config.line3}
+                  </span>
+               </div>
             </div>
-            <h1 className="font-script text-6xl md:text-7xl shimmer-text animate-fade-in-up delay-600 py-6 leading-normal">
-              {config.brideName || "Mempelai Wanita"}
-            </h1>
+
+            <p className="text-yellow-200/60 text-xs md:text-sm animate-fade-in-up delay-800 italic tracking-widest uppercase">
+              {config.line4}
+            </p>
           </div>
 
-          {/* Countdown Timer */}
           <div className="mb-12 animate-fade-in-up delay-700">
-            <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-4">⏳ Menuju Hari Bahagia</p>
+            <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-4">⏳ Menuju Pelaksanaan Acara</p>
             <div className="flex gap-3 justify-center">
               <div className="countdown-item">
                 <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.days}</span>
@@ -129,14 +144,30 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
             </div>
           </div>
 
-          {/* Divider */}
+          {/* Conditional Muballigh Section */}
+          {config.showMuballigh && config.muballighs.some(m => m.trim() !== "") && (
+            <div className="mb-12 animate-fade-in-up delay-800">
+              <div className="inline-flex items-center gap-2 text-yellow-200/40 text-[10px] tracking-[0.2em] uppercase mb-4">
+                <div className="w-4 h-px bg-yellow-500/20" />
+                <span>📢 Muballigh Acara</span>
+                <div className="w-4 h-px bg-yellow-500/20" />
+              </div>
+              <div className="space-y-2">
+                {config.muballighs.map((name, idx) => name.trim() !== "" && (
+                  <p key={idx} className="font-display text-lg text-yellow-100 italic">
+                    {name}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-center gap-4 my-10 animate-fade-in-up delay-1000">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent to-[#d4af37]" />
-            <div className="text-2xl opacity-80">🕊️</div>
+            <div className="text-2xl opacity-80">📖</div>
             <div className="flex-1 h-px bg-gradient-to-l from-transparent to-[#d4af37]" />
           </div>
 
-          {/* Event Details */}
           <div className="space-y-8 animate-fade-in-up delay-1000">
             <div>
               <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-2">📅 Tanggal</p>
@@ -153,15 +184,13 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
             </div>
           </div>
 
-          {/* Message Section */}
           <div className="mt-12 p-6 rounded-3xl glass-panel animate-fade-in-up delay-1500 border-yellow-500/10">
-            <p className="text-yellow-200/40 text-[10px] tracking-widest uppercase mb-3">💌 Pesan</p>
+            <p className="text-yellow-200/40 text-[10px] tracking-widest uppercase mb-3">💌 Pesan Khusus</p>
             <p className="text-yellow-100/90 text-sm leading-relaxed italic font-serif">
               "{config.message}"
             </p>
           </div>
 
-          {/* RSVP Section */}
           <div className="mt-12 border-t border-white/5 pt-10 animate-fade-in-up delay-1500">
             <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-6">✋ Konfirmasi Kehadiran</p>
             
@@ -216,32 +245,51 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
                   {attendanceStatus === 'yes' ? "Konfirmasi kehadiran Anda telah tercatat." : "Terima kasih telah memberikan kabar."}
                 </p>
                 <button 
-                  onClick={() => { setIsSuccess(false); setAttendanceStatus(null); }}
+                  onClick={() => { setIsSuccess(false); setAttendanceStatus(null); setGuestName(''); }}
                   className="mt-4 text-xs text-yellow-500/50 underline uppercase tracking-widest"
                 >
-                  Ubah Respon
+                  Kirim Respon Lain
                 </button>
               </div>
             )}
           </div>
 
-          {/* Share Button */}
-          <div className="mt-12 pt-8 border-t border-white/5">
-            <button 
-              onClick={handleShare}
-              className="w-full py-4 rounded-full bg-slate-900 border border-yellow-500/30 text-yellow-100 font-bold tracking-widest uppercase text-[10px] flex items-center justify-center gap-3 hover:bg-yellow-500/10 transition-colors"
-            >
-              {showCopyStatus ? "✓ Link Disalin!" : "Bagikan Undangan"}
-            </button>
+          <div className="mt-10 animate-fade-in-up delay-[1.8s]">
+            <div className="p-6 md:p-8 rounded-3xl glass-panel border-white/5" style={{ background: 'linear-gradient(135deg, rgba(212, 175, 55, 0.1), rgba(212, 175, 55, 0.05))' }}>
+              <p className="text-yellow-200/60 text-[10px] tracking-[0.1em] uppercase mb-3">👥 Tamu yang Akan Hadir</p>
+              <div className="flex items-center justify-center gap-2 mb-6">
+                <span className="text-4xl font-display text-yellow-100">{totalConfirmedPeople}</span>
+                <span className="text-yellow-200/50 text-sm">orang</span>
+              </div>
+              
+              <div className="flex flex-wrap justify-center gap-2 max-w-full">
+                {allGuestNames.length > 0 ? (
+                  allGuestNames.map((name, idx) => (
+                    <span 
+                      key={idx} 
+                      className="text-[10px] md:text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-yellow-200/60 hover:bg-yellow-500/10 hover:border-yellow-500/30 transition-all duration-300"
+                    >
+                      {name}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-[10px] text-yellow-200/20 italic">Belum ada konfirmasi kehadiran.</span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-12 py-4">
+             <div className="flex items-center justify-center gap-2 text-yellow-200/30 text-[10px] tracking-widest uppercase">
+               <span>🙏</span> <span>Darul Huda Portal</span> <span>🙏</span>
+             </div>
           </div>
 
         </div>
 
-        {/* Bottom Decorative Border */}
         <div className="h-2 w-full" style={{ background: 'linear-gradient(90deg, transparent, #d4af37, #f4e4ba, #d4af37, transparent)' }} />
       </div>
 
-      {/* Scroll Indicator */}
       <div className="mt-8 mb-10 text-yellow-200/30 text-center animate-fade-in-up delay-2000">
         <p className="text-[10px] tracking-widest uppercase mb-2">Scroll untuk detail</p>
         <div className="scroll-indicator">

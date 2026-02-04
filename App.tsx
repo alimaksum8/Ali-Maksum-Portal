@@ -8,19 +8,23 @@ import { generatePortalGreeting } from './services/geminiService';
 
 const App: React.FC = () => {
   const [view, setView] = useState<PortalView>(PortalView.LANDING);
-  const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Ali Maksum Portal");
+  const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Darul Huda Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
-  // Configuration State dengan tanggal default di masa depan
+  // Configuration State dengan data default acara
   const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>({
-    groomName: "Arman",
-    brideName: "Sinta",
-    eventDateIso: "2025-12-12T10:00",
-    eventDateDisplay: "Minggu, 12 Desember 2025",
-    eventTime: "10:00 WIB - Selesai",
-    venueName: "Grand Ballroom Hotel Mulia",
-    venueAddress: "Jl. Asia Afrika No. 8, Jakarta Selatan",
-    message: "Merupakan suatu kehormatan dan kebahagiaan bagi kami apabila Bapak/Ibu/Saudara/i berkenan hadir untuk memberikan doa restu."
+    line1: "Maulid Nabi Muhammad Saw",
+    line2: "Haul Masyayikh Pon-Pes Darul Huda",
+    line3: "IKSADAH",
+    line4: "Ikatan Alumni Santri Darul Huda",
+    showMuballigh: true,
+    muballighs: ["KH. Abdurrahman Wahid", "KH. Maimun Zubair"],
+    eventDateIso: "2025-05-12T19:30",
+    eventDateDisplay: "Senin, 12 Mei 2025",
+    eventTime: "19:30 WIB - Selesai",
+    venueName: "Halaman Utama Pon-Pes Darul Huda",
+    venueAddress: "Jl. Pengarang No. 12, Jawa Timur",
+    message: "Kami mengharap kehadiran Bapak/Ibu/Saudara/i dalam acara tahunan kami sebagai bentuk syukur dan mempererat tali silaturahmi."
   });
 
   // Handle direct link navigation
@@ -35,8 +39,12 @@ const App: React.FC = () => {
   const handleCreateNew = () => {
     if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {
       setInvitationConfig({
-        groomName: "",
-        brideName: "",
+        line1: "",
+        line2: "",
+        line3: "",
+        line4: "",
+        showMuballigh: false,
+        muballighs: [""],
         eventDateIso: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
         eventDateDisplay: "",
         eventTime: "",
@@ -68,7 +76,7 @@ const App: React.FC = () => {
       url.searchParams.delete('view');
       window.history.replaceState({}, '', url.toString());
       setView(targetView);
-      setGreeting("Selamat datang kembali di Ali Maksum Portal");
+      setGreeting("Selamat datang kembali di Darul Huda Portal");
       return;
     }
 
@@ -101,8 +109,8 @@ const App: React.FC = () => {
               <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
               <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Sistem Online</span>
             </div>
-            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight">
-              ALI MAKSUM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-rose-400 animate-gradient">PORTAL</span>
+            <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight uppercase">
+              DARUL HUDA <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-rose-400 animate-gradient">PORTAL</span>
             </h1>
             <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed min-h-[3rem]">
               {isLoadingGreeting ? "..." : greeting}
@@ -155,7 +163,7 @@ const App: React.FC = () => {
 
       <footer className="relative z-10 p-8 text-center border-t border-white/5">
         <p className="text-slate-500 text-sm font-medium">
-          &copy; 2025 Ali Maksum Digital Solutions • <span className="text-indigo-400/80">Pengalaman Premium</span>
+          &copy; 2025 Darul Huda Digital Solutions • <span className="text-indigo-400/80">Pengalaman Premium</span>
         </p>
       </footer>
     </div>
