@@ -11,12 +11,12 @@ const App: React.FC = () => {
   const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Ali Maksum Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
-  // Invitation Configuration State
+  // Configuration State dengan tanggal default di masa depan
   const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>({
     groomName: "Arman",
     brideName: "Sinta",
-    eventDateIso: "2025-02-15T10:00",
-    eventDateDisplay: "Sabtu, 15 Februari 2025",
+    eventDateIso: "2025-12-12T10:00",
+    eventDateDisplay: "Minggu, 12 Desember 2025",
     eventTime: "10:00 WIB - Selesai",
     venueName: "Grand Ballroom Hotel Mulia",
     venueAddress: "Jl. Asia Afrika No. 8, Jakarta Selatan",
@@ -27,7 +27,6 @@ const App: React.FC = () => {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
-    
     if (viewParam === 'invitation') {
       setView(PortalView.INVITATION);
     }
@@ -38,7 +37,7 @@ const App: React.FC = () => {
       setInvitationConfig({
         groomName: "",
         brideName: "",
-        eventDateIso: "",
+        eventDateIso: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
         eventDateDisplay: "",
         eventTime: "",
         venueName: "",
@@ -68,13 +67,11 @@ const App: React.FC = () => {
       const url = new URL(window.location.href);
       url.searchParams.delete('view');
       window.history.replaceState({}, '', url.toString());
-      
       setView(targetView);
       setGreeting("Selamat datang kembali di Ali Maksum Portal");
       return;
     }
 
-    // Set view dulu agar menu tidak hilang saat loading AI
     setView(targetView);
     setIsLoadingGreeting(true);
     
@@ -83,7 +80,6 @@ const App: React.FC = () => {
       const newGreeting = await generatePortalGreeting(role);
       setGreeting(newGreeting);
     } catch (err) {
-      console.error("Gagal memuat salam AI:", err);
       setGreeting(targetView === PortalView.ADMIN ? "Selamat bekerja di Panel Admin." : "Selamat datang di Undangan Kami.");
     } finally {
       setIsLoadingGreeting(false);
@@ -99,32 +95,21 @@ const App: React.FC = () => {
       </div>
 
       <main className="flex-1 relative z-10 flex flex-col items-center justify-center p-6 md:p-12 lg:p-24 overflow-y-auto">
-        
-        {/* Header Section */}
         {view === PortalView.LANDING && (
           <div className="text-center mb-16 max-w-2xl animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-white/5 border border-white/10 mb-6 backdrop-blur-md">
               <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse" />
               <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Sistem Online</span>
             </div>
-            
             <h1 className="text-5xl md:text-7xl font-extrabold text-white mb-6 tracking-tight">
               ALI MAKSUM <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-rose-400 animate-gradient">PORTAL</span>
             </h1>
-            
             <p className="text-lg md:text-xl text-slate-400 font-medium leading-relaxed min-h-[3rem]">
-              {isLoadingGreeting ? (
-                <span className="inline-flex space-x-1">
-                  <span className="animate-bounce delay-75">.</span>
-                  <span className="animate-bounce delay-150">.</span>
-                  <span className="animate-bounce delay-300">.</span>
-                </span>
-              ) : greeting}
+              {isLoadingGreeting ? "..." : greeting}
             </p>
           </div>
         )}
 
-        {/* Portal Selection View */}
         {view === PortalView.LANDING && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl items-center animate-in zoom-in-95 duration-500">
             <PortalCard
@@ -135,7 +120,6 @@ const App: React.FC = () => {
               onClick={() => handlePortalSwitch(PortalView.ADMIN)}
               primary
             />
-            
             <PortalCard
               title="UNDANGAN"
               description="Akses undangan eksklusif dan konfirmasi kehadiran tamu secara digital."
@@ -146,7 +130,6 @@ const App: React.FC = () => {
           </div>
         )}
 
-        {/* Admin View */}
         {view === PortalView.ADMIN && (
           <AdminDashboard 
             config={invitationConfig} 
@@ -156,18 +139,15 @@ const App: React.FC = () => {
           />
         )}
 
-        {/* Invitation View */}
         {view === PortalView.INVITATION && (
           <div className="flex flex-col items-center w-full animate-in fade-in duration-1000">
-            {!(new URLSearchParams(window.location.search).get('view') === 'invitation') && (
-              <button 
-                onClick={() => handlePortalSwitch(PortalView.LANDING)}
-                className="mb-8 px-6 py-2 rounded-full glass-panel border-rose-500/30 text-rose-300 hover:bg-rose-500 hover:text-white transition-all text-sm font-bold flex items-center gap-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-                KEMBALI KE PORTAL
-              </button>
-            )}
+            <button 
+              onClick={() => handlePortalSwitch(PortalView.LANDING)}
+              className="mb-8 px-6 py-2 rounded-full glass-panel border-rose-500/30 text-rose-300 hover:bg-rose-500 hover:text-white transition-all text-sm font-bold flex items-center gap-2"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+              KEMBALI KE PORTAL
+            </button>
             <InvitationPortal config={invitationConfig} />
           </div>
         )}
