@@ -79,21 +79,29 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
     onUpdate({ ...config, muballighs: newMuballighs.length > 0 ? newMuballighs : [""] });
   };
 
-  const handleCopyLink = async () => {
-    const url = new URL(window.location.origin + window.location.pathname);
-    url.searchParams.set('view', 'invitation');
+  const generateUniqueLink = (data: InvitationConfig) => {
+    const baseUrl = window.location.origin + window.location.pathname;
+    // Encode data ke Base64 agar link unik dan tidak bentrok
+    const encodedData = btoa(JSON.stringify(data));
+    return `${baseUrl}?view=invitation&d=${encodedData}`;
+  };
+
+  const handleCopyLink = async (dataToCopy: InvitationConfig = config) => {
+    const link = generateUniqueLink(dataToCopy);
     try {
-      await navigator.clipboard.writeText(url.toString());
+      await navigator.clipboard.writeText(link);
       setCopySuccess(true);
       setTimeout(() => setCopySuccess(false), 2000);
+      return true;
     } catch (err) {
       alert("Gagal menyalin link.");
+      return false;
     }
   };
 
   const handlePublish = async () => {
     setIsPublishing(true);
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 800));
     
     // Save to history
     const history = [...publishedHistory];
@@ -108,9 +116,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
     setPublishedHistory(history);
     localStorage.setItem('darul_huda_history', JSON.stringify(history));
 
-    handleCopyLink();
+    const success = await handleCopyLink(config);
     setIsPublishing(false);
-    alert('Undangan berhasil dipublikasikan & diarsipkan!');
+    if (success) alert('Undangan berhasil dipublikasikan & Link Unik disalin!');
   };
 
   const handleUpdateFromHistory = (item: InvitationConfig) => {
@@ -288,7 +296,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             
             <div className="flex flex-col gap-4">
                <button onClick={handlePublish} disabled={isPublishing} className="w-full py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all shadow-lg flex items-center justify-center gap-2">
-                 {isPublishing ? "Memproses..." : "Publikasikan & Salin Link Undangan"}
+                 {isPublishing ? "Memproses..." : "Publikasikan & Salin Link Unik"}
                </button>
                {copySuccess && <p className="text-center text-green-400 text-sm font-bold animate-bounce">✓ Link Berhasil Disalin ke Clipboard!</p>}
             </div>
@@ -296,7 +304,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
               <h4 className="text-indigo-400 font-bold text-sm mb-2 uppercase tracking-widest">Analitik Real-Time</h4>
               <p className="text-xs text-slate-500 leading-relaxed mb-4">
-                Data tamu di atas diambil langsung dari formulir undangan. Pastikan untuk mengecek secara berkala untuk estimasi konsumsi.
+                Data tamu di atas disimpan secara lokal. Pastikan untuk mengecek secara berkala.
               </p>
               
               <div className="pt-6 border-t border-white/5 space-y-4">
@@ -305,7 +313,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                    Arsip Undangan Terpublikasi
                 </h4>
                 
-                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
+                <div className="space-y-3 max-h-[350px] overflow-y-auto pr-2 scrollbar-thin">
                    {publishedHistory.length > 0 ? (
                      publishedHistory.map((item) => (
                        <div key={item.id} className="p-4 rounded-2xl glass-panel border-white/5 hover:border-indigo-500/30 transition-all flex flex-col gap-3">
@@ -317,16 +325,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
                              <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 uppercase font-bold border border-white/10">v1.0</span>
                           </div>
                           
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-3 gap-2">
                              <button 
                                onClick={() => handleUpdateFromHistory(item)}
-                               className="flex-1 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20"
+                               className="py-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 text-[9px] font-bold uppercase tracking-wider hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20"
                              >
-                               Update
+                               Edit
+                             </button>
+                             <button 
+                               onClick={() => handleCopyLink(item)}
+                               className="py-1.5 rounded-lg bg-emerald-500/10 text-emerald-300 text-[9px] font-bold uppercase tracking-wider hover:bg-emerald-500 hover:text-white transition-all border border-emerald-500/20"
+                             >
+                               Link
                              </button>
                              <button 
                                onClick={() => handleDeleteFromHistory(item.id)}
-                               className="px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-[10px] font-bold uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                               className="py-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-[9px] font-bold uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
                              >
                                Hapus
                              </button>

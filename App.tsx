@@ -28,10 +28,24 @@ const App: React.FC = () => {
     message: "Kami mengharap kehadiran Bapak/Ibu/Saudara/i dalam acara tahunan kami sebagai bentuk syukur dan mempererat tali silaturahmi."
   });
 
-  // Handle direct link navigation
+  // Handle direct link navigation & data decoding
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
+    const dataParam = urlParams.get('d');
+    
+    // Jika ada data terenkripsi di URL, gunakan data tersebut
+    if (dataParam) {
+      try {
+        const decodedData = JSON.parse(atob(dataParam));
+        setInvitationConfig(decodedData);
+        setView(PortalView.INVITATION);
+        return; // Prioritaskan data dari URL
+      } catch (e) {
+        console.error("Gagal mendekode data undangan dari link:", e);
+      }
+    }
+
     if (viewParam === 'invitation') {
       setView(PortalView.INVITATION);
     }
@@ -76,6 +90,7 @@ const App: React.FC = () => {
     if (targetView === PortalView.LANDING) {
       const url = new URL(window.location.href);
       url.searchParams.delete('view');
+      url.searchParams.delete('d');
       window.history.replaceState({}, '', url.toString());
       setView(targetView);
       setGreeting("Selamat datang kembali di Darul Huda Portal");
