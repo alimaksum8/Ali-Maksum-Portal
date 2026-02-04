@@ -12,6 +12,7 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   const [guestCount, setGuestCount] = useState(1);
   const [isSuccess, setIsSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+  const [isExpired, setIsExpired] = useState(false);
   
   // Real RSVP State
   const [allRsvps, setAllRsvps] = useState<RSVP[]>([]);
@@ -24,7 +25,7 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
     }
   }, []);
 
-  // Countdown Logic
+  // Countdown and Expiry Logic
   useEffect(() => {
     const timer = setInterval(() => {
       if (!config.eventDateIso) return;
@@ -36,7 +37,9 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
       if (distance < 0) {
         clearInterval(timer);
         setTimeLeft({ days: '00', hours: '00', minutes: '00', seconds: '00' });
+        setIsExpired(true);
       } else {
+        setIsExpired(false);
         const d = Math.floor(distance / (1000 * 60 * 60 * 24));
         const h = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
         const m = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -55,6 +58,8 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   }, [config.eventDateIso]);
 
   const handleConfirm = () => {
+    if (isExpired) return;
+
     const status = attendanceStatus || 'no';
     
     const newRsvp: RSVP = {
@@ -83,6 +88,15 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   return (
     <div className="w-full max-w-md md:max-w-xl mx-auto font-serif relative overflow-hidden flex flex-col items-center">
       
+      {/* Expiry Seal Badge */}
+      {isExpired && (
+        <div className="absolute top-20 -right-4 z-50 animate-heartbeat pointer-events-none">
+          <div className="bg-rose-600/90 border-2 border-rose-400 text-white font-display px-6 py-2 rotate-12 shadow-[0_0_20px_rgba(225,29,72,0.5)]">
+            <p className="text-sm font-black tracking-widest uppercase">Undangan Kadaluarsa</p>
+          </div>
+        </div>
+      )}
+
       <div className="absolute top-10 left-5 text-4xl animate-float opacity-60 pointer-events-none">🕌</div>
       <div className="absolute top-20 right-8 text-3xl animate-float-reverse delay-500 opacity-50 pointer-events-none">🌙</div>
       <div className="absolute top-40 left-10 text-2xl animate-sparkle delay-1000 opacity-70 pointer-events-none">✨</div>
@@ -122,27 +136,33 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
             </p>
           </div>
 
-          <div className="mb-12 animate-fade-in-up delay-700">
-            <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-4">⏳ Menuju Pelaksanaan Acara</p>
-            <div className="flex gap-3 justify-center">
-              <div className="countdown-item">
-                <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.days}</span>
-                <span className="text-[10px] uppercase text-yellow-200/60">Hari</span>
-              </div>
-              <div className="countdown-item">
-                <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.hours}</span>
-                <span className="text-[10px] uppercase text-yellow-200/60">Jam</span>
-              </div>
-              <div className="countdown-item">
-                <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.minutes}</span>
-                <span className="text-[10px] uppercase text-yellow-200/60">Menit</span>
-              </div>
-              <div className="countdown-item">
-                <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.seconds}</span>
-                <span className="text-[10px] uppercase text-yellow-200/60">Detik</span>
+          {!isExpired ? (
+            <div className="mb-12 animate-fade-in-up delay-700">
+              <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-4">⏳ Menuju Pelaksanaan Acara</p>
+              <div className="flex gap-3 justify-center">
+                <div className="countdown-item">
+                  <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.days}</span>
+                  <span className="text-[10px] uppercase text-yellow-200/60">Hari</span>
+                </div>
+                <div className="countdown-item">
+                  <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.hours}</span>
+                  <span className="text-[10px] uppercase text-yellow-200/60">Jam</span>
+                </div>
+                <div className="countdown-item">
+                  <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.minutes}</span>
+                  <span className="text-[10px] uppercase text-yellow-200/60">Menit</span>
+                </div>
+                <div className="countdown-item">
+                  <span className="text-2xl font-bold block text-yellow-100 font-display">{timeLeft.seconds}</span>
+                  <span className="text-[10px] uppercase text-yellow-200/60">Detik</span>
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="mb-12 animate-fade-in-up delay-700 py-4 glass-panel border-rose-500/20 rounded-2xl mx-4">
+              <p className="text-rose-400 text-xs font-bold tracking-[0.3em] uppercase">Acara Telah Berlangsung</p>
+            </div>
+          )}
 
           {/* Conditional Muballigh Section */}
           {config.showMuballigh && config.muballighs.some(m => m.trim() !== "") && (
@@ -194,7 +214,11 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
           <div className="mt-12 border-t border-white/5 pt-10 animate-fade-in-up delay-1500">
             <p className="text-yellow-200/60 text-[10px] tracking-[0.2em] uppercase mb-6">✋ Konfirmasi Kehadiran</p>
             
-            {!isSuccess ? (
+            {isExpired ? (
+              <div className="bg-white/5 border border-white/10 p-6 rounded-2xl opacity-60">
+                <p className="text-slate-400 text-sm font-medium italic">Pendaftaran/Konfirmasi kehadiran telah ditutup karena waktu acara sudah terlewati.</p>
+              </div>
+            ) : !isSuccess ? (
               <div className="space-y-4">
                 <div className="flex gap-2">
                   <button 

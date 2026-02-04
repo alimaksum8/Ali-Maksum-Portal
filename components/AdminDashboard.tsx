@@ -13,12 +13,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   const [isPublishing, setIsPublishing] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
   const [guestList, setGuestList] = useState<RSVP[]>([]);
+  const [publishedHistory, setPublishedHistory] = useState<InvitationConfig[]>([]);
 
   // Load Real Data from localStorage
   useEffect(() => {
-    const saved = localStorage.getItem('darul_huda_rsvps');
-    if (saved) {
-      setGuestList(JSON.parse(saved));
+    const savedGuests = localStorage.getItem('darul_huda_rsvps');
+    if (savedGuests) {
+      setGuestList(JSON.parse(savedGuests));
+    }
+
+    const savedHistory = localStorage.getItem('darul_huda_history');
+    if (savedHistory) {
+      setPublishedHistory(JSON.parse(savedHistory));
     }
   }, []);
 
@@ -88,9 +94,38 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   const handlePublish = async () => {
     setIsPublishing(true);
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Save to history
+    const history = [...publishedHistory];
+    const existingIndex = history.findIndex(h => h.id === config.id);
+    
+    if (existingIndex > -1) {
+      history[existingIndex] = { ...config };
+    } else {
+      history.unshift({ ...config });
+    }
+    
+    setPublishedHistory(history);
+    localStorage.setItem('darul_huda_history', JSON.stringify(history));
+
     handleCopyLink();
     setIsPublishing(false);
-    alert('Link undangan berhasil disalin!');
+    alert('Undangan berhasil dipublikasikan & diarsipkan!');
+  };
+
+  const handleUpdateFromHistory = (item: InvitationConfig) => {
+    if (confirm(`Load data "${item.line1 || 'Tanpa Judul'}" ke editor?`)) {
+      onUpdate(item);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleDeleteFromHistory = (id: string) => {
+    if (confirm('Hapus undangan ini dari arsip?')) {
+      const filtered = publishedHistory.filter(h => h.id !== id);
+      setPublishedHistory(filtered);
+      localStorage.setItem('darul_huda_history', JSON.stringify(filtered));
+    }
   };
 
   const handleResetGuests = () => {
@@ -260,9 +295,51 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
 
             <div className="p-6 rounded-3xl bg-indigo-500/5 border border-indigo-500/10">
               <h4 className="text-indigo-400 font-bold text-sm mb-2 uppercase tracking-widest">Analitik Real-Time</h4>
-              <p className="text-xs text-slate-500 leading-relaxed">
-                Data tamu di atas diambil langsung dari formulir undangan. Pastikan untuk mengecek secara berkala untuk estimasi konsumsi dan tempat duduk.
+              <p className="text-xs text-slate-500 leading-relaxed mb-4">
+                Data tamu di atas diambil langsung dari formulir undangan. Pastikan untuk mengecek secara berkala untuk estimasi konsumsi.
               </p>
+              
+              <div className="pt-6 border-t border-white/5 space-y-4">
+                <h4 className="text-white font-bold text-sm uppercase tracking-widest flex items-center gap-2">
+                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400"><path d="M12 2v20"/><path d="m17 17-5 5-5-5"/><path d="m17 7-5-5-5 5"/></svg>
+                   Arsip Undangan Terpublikasi
+                </h4>
+                
+                <div className="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin">
+                   {publishedHistory.length > 0 ? (
+                     publishedHistory.map((item) => (
+                       <div key={item.id} className="p-4 rounded-2xl glass-panel border-white/5 hover:border-indigo-500/30 transition-all flex flex-col gap-3">
+                          <div className="flex justify-between items-start">
+                             <div>
+                                <p className="text-white text-sm font-bold leading-tight line-clamp-1">{item.line1 || "Undangan Tanpa Judul"}</p>
+                                <p className="text-[10px] text-slate-500 font-medium">{item.eventDateDisplay || "Tanggal tidak diatur"}</p>
+                             </div>
+                             <span className="text-[10px] px-2 py-0.5 rounded bg-white/5 text-slate-400 uppercase font-bold border border-white/10">v1.0</span>
+                          </div>
+                          
+                          <div className="flex gap-2">
+                             <button 
+                               onClick={() => handleUpdateFromHistory(item)}
+                               className="flex-1 py-1.5 rounded-lg bg-indigo-500/10 text-indigo-300 text-[10px] font-bold uppercase tracking-wider hover:bg-indigo-500 hover:text-white transition-all border border-indigo-500/20"
+                             >
+                               Update
+                             </button>
+                             <button 
+                               onClick={() => handleDeleteFromHistory(item.id)}
+                               className="px-3 py-1.5 rounded-lg bg-rose-500/10 text-rose-500 text-[10px] font-bold uppercase tracking-wider hover:bg-rose-500 hover:text-white transition-all border border-rose-500/20"
+                             >
+                               Hapus
+                             </button>
+                          </div>
+                       </div>
+                     ))
+                   ) : (
+                     <div className="text-center py-6 border border-dashed border-white/10 rounded-2xl">
+                        <p className="text-slate-500 text-[10px] italic">Belum ada riwayat publikasi.</p>
+                     </div>
+                   )}
+                </div>
+              </div>
             </div>
           </div>
         </div>

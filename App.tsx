@@ -13,6 +13,7 @@ const App: React.FC = () => {
 
   // Configuration State dengan data default acara
   const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>({
+    id: "default-event-2025",
     line1: "Maulid Nabi Muhammad Saw",
     line2: "Haul Masyayikh Pon-Pes Darul Huda",
     line3: "IKSADAH",
@@ -39,6 +40,7 @@ const App: React.FC = () => {
   const handleCreateNew = () => {
     if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {
       setInvitationConfig({
+        id: `event-${Date.now()}`,
         line1: "",
         line2: "",
         line3: "",
