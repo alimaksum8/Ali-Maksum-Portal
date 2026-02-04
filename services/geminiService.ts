@@ -13,7 +13,10 @@ export const generatePortalGreeting = async (role: 'admin' | 'guest'): Promise<s
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    // Correctly initialize the GoogleGenAI instance with the API key from environment variables
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    
+    // Directly use ai.models.generateContent to query the model with specified name and prompt
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Generate a short, sophisticated, and welcoming one-sentence greeting in Indonesian for a user entering the ${role} section of a premium digital portal called 'Darul Huda Portal'. Keep it professional yet warm and poetic.`,
@@ -23,6 +26,7 @@ export const generatePortalGreeting = async (role: 'admin' | 'guest'): Promise<s
       }
     });
 
+    // Access the .text property directly (not as a method call) as per the latest SDK spec
     return response.text?.trim() || `Selamat datang di portal ${role}.`;
   } catch (error) {
     console.error("Gemini Greeting Error:", error);

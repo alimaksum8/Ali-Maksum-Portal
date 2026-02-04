@@ -6,13 +6,15 @@ import { InvitationPortal } from './components/InvitationPortal';
 import { AdminDashboard } from './components/AdminDashboard';
 import { generatePortalGreeting } from './services/geminiService';
 
+const STORAGE_KEY = 'darul_huda_draft_config';
+
 const App: React.FC = () => {
   const [view, setView] = useState<PortalView>(PortalView.LANDING);
   const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Darul Huda Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
 
-  // Configuration State dengan data default acara
-  const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>({
+  // Initial State Default
+  const defaultConfig: InvitationConfig = {
     id: "default-event-2025",
     line1: "Maulid Nabi Muhammad Saw",
     line2: "Haul Masyayikh Pon-Pes Darul Huda",
@@ -26,34 +28,54 @@ const App: React.FC = () => {
     venueName: "Halaman Utama Pon-Pes Darul Huda",
     venueAddress: "Jl. Pengarang No. 12, Jawa Timur",
     message: "Kami mengharap kehadiran Bapak/Ibu/Saudara/i dalam acara tahunan kami sebagai bentuk syukur dan mempererat tali silaturahmi."
-  });
+  };
 
-  // Handle direct link navigation & data decoding
+  const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>(defaultConfig);
+
+  // 1. Load data saat pertama kali mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
     const dataParam = urlParams.get('d');
     
-    // Jika ada data terenkripsi di URL, gunakan data tersebut
+    // Prioritas 1: Data dari URL (untuk tamu / link unik)
     if (dataParam) {
       try {
-        const decodedData = JSON.parse(atob(dataParam));
+        const decodedString = decodeURIComponent(escape(atob(dataParam)));
+        const decodedData = JSON.parse(decodedString);
         setInvitationConfig(decodedData);
         setView(PortalView.INVITATION);
-        return; // Prioritaskan data dari URL
+        return; 
       } catch (e) {
         console.error("Gagal mendekode data undangan dari link:", e);
       }
     }
 
-    if (viewParam === 'invitation') {
-      setView(PortalView.INVITATION);
+    // Prioritas 2: Data dari LocalStorage (untuk Admin agar tetap sinkron)
+    const savedDraft = localStorage.getItem(STORAGE_KEY);
+    if (savedDraft) {
+      try {
+        setInvitationConfig(JSON.parse(savedDraft));
+      } catch (e) {
+        console.error("Gagal memuat draft dari storage");
+      }
     }
+
+    if (viewParam === 'invitation') setView(PortalView.INVITATION);
+    if (viewParam === 'admin') setView(PortalView.ADMIN);
   }, []);
+
+  // 2. Simpan setiap perubahan config ke localStorage secara otomatis
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (!urlParams.get('d')) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(invitationConfig));
+    }
+  }, [invitationConfig]);
 
   const handleCreateNew = () => {
     if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {
-      setInvitationConfig({
+      const newConfig: InvitationConfig = {
         id: `event-${Date.now()}`,
         line1: "",
         line2: "",
@@ -67,34 +89,28 @@ const App: React.FC = () => {
         venueName: "",
         venueAddress: "",
         message: ""
-      });
+      };
+      setInvitationConfig(newConfig);
     }
   };
 
-  const AdminIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
-      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
-      <line x1="3" y1="9" x2="21" y2="9"/>
-      <line x1="9" y1="21" x2="9" y2="9"/>
-    </svg>
-  );
-
-  const InvitationIcon = (
-    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-    </svg>
-  );
-
   const handlePortalSwitch = async (targetView: PortalView) => {
-    if (targetView === PortalView.LANDING) {
-      const url = new URL(window.location.href);
-      url.searchParams.delete('view');
-      url.searchParams.delete('d');
-      window.history.replaceState({}, '', url.toString());
-      setView(targetView);
-      setGreeting("Selamat datang kembali di Darul Huda Portal");
-      return;
+    // Hindari manipulasi history jika berada di lingkungan blob: (sering terjadi di sandbox/preview)
+    const isBlob = window.location.protocol === 'blob:';
+
+    if (!isBlob) {
+      try {
+        const url = new URL(window.location.href);
+        if (targetView === PortalView.LANDING) {
+          url.searchParams.delete('view');
+          url.searchParams.delete('d');
+        } else {
+          url.searchParams.set('view', targetView.toLowerCase());
+        }
+        window.history.replaceState({}, '', url.toString());
+      } catch (e) {
+        console.warn("History API tidak tersedia atau gagal dijalankan:", e);
+      }
     }
 
     setView(targetView);
@@ -111,9 +127,20 @@ const App: React.FC = () => {
     }
   };
 
+  const AdminIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-400">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/>
+    </svg>
+  );
+
+  const InvitationIcon = (
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-rose-400">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+    </svg>
+  );
+
   return (
     <div className="min-h-screen w-full relative overflow-hidden flex flex-col bg-slate-950 text-slate-200">
-      {/* Background Decorations */}
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
         <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] rounded-full bg-indigo-600/20 blur-[120px] animate-pulse" />
         <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] rounded-full bg-rose-600/10 blur-[120px]" />
@@ -180,7 +207,7 @@ const App: React.FC = () => {
 
       <footer className="relative z-10 p-8 text-center border-t border-white/5">
         <p className="text-slate-500 text-sm font-medium">
-          &copy; 2025 Darul Huda Digital Solutions • <span className="text-indigo-400/80">Pengalaman Premium</span>
+          &copy; 2025 Darul Huda Digital Solutions • <span className="text-indigo-400/80">Vercel Ready</span>
         </p>
       </footer>
     </div>
