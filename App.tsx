@@ -4,7 +4,9 @@ import { PortalView, InvitationConfig } from './types';
 import { PortalCard } from './components/PortalCard';
 import { InvitationPortal } from './components/InvitationPortal';
 import { AdminDashboard } from './components/AdminDashboard';
+import { AdminLogin } from './components/AdminLogin';
 import { generatePortalGreeting } from './services/geminiService';
+import { db, doc, onSnapshot, setDoc, auth, onAuthStateChanged, User } from './services/firebaseService';
 
 const STORAGE_KEY = 'darul_huda_draft_config';
 
@@ -12,6 +14,8 @@ const App: React.FC = () => {
   const [view, setView] = useState<PortalView>(PortalView.LANDING);
   const [greeting, setGreeting] = useState<string>("Selamat datang kembali di Darul Huda Portal");
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
   // Initial State Default
   const defaultConfig: InvitationConfig = {
@@ -32,12 +36,24 @@ const App: React.FC = () => {
 
   const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>(defaultConfig);
 
-  // 1. Load data saat pertama kali mount
+  // 1. Load data saat pertama kali mount & Sinkronisasi Realtime dengan Firestore
   useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
     const dataParam = urlParams.get('d');
     
+    // Hapus sepenuhnya penyimpanan local dari browser
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch (e) {
+      console.error("Gagal menghapus penyimpanan local:", e);
+    }
+
     // Prioritas 1: Data dari URL (untuk tamu / link unik)
     if (dataParam) {
       try {
@@ -51,26 +67,42 @@ const App: React.FC = () => {
       }
     }
 
-    // Prioritas 2: Data dari LocalStorage (untuk Admin agar tetap sinkron)
-    const savedDraft = localStorage.getItem(STORAGE_KEY);
-    if (savedDraft) {
-      try {
-        setInvitationConfig(JSON.parse(savedDraft));
-      } catch (e) {
-        console.error("Gagal memuat draft dari storage");
+    // Ambil data draf dari Firestore secara realtime
+    const unsubscribe = onSnapshot(doc(db, "configs", "current"), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data() as InvitationConfig;
+        setInvitationConfig(prev => {
+          if (JSON.stringify(prev) !== JSON.stringify(data)) {
+            return data;
+          }
+          return prev;
+        });
       }
-    }
+    }, (err) => {
+      console.error("Gagal mengambil data dari Firestore:", err);
+    });
 
     if (viewParam === 'invitation') setView(PortalView.INVITATION);
     if (viewParam === 'admin') setView(PortalView.ADMIN);
+
+    return () => {
+      unsubscribe();
+      unsubscribeAuth();
+    };
   }, []);
 
-  // 2. Simpan setiap perubahan config ke localStorage secara otomatis
+  // 2. Kirim perubahan draf ke Firestore secara otomatis dengan Debounce 1 Detik
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    if (!urlParams.get('d')) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(invitationConfig));
-    }
+    const timer = setTimeout(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      // Jangan timpa draf di Firestore jika sedang melihat link spesifik tamu (?d=...)
+      if (!urlParams.get('d') && invitationConfig) {
+        setDoc(doc(db, "configs", "current"), invitationConfig)
+          .catch(err => console.error("Gagal menyinkronkan draf ke Firestore:", err));
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
   }, [invitationConfig]);
 
   const handleCreateNew = () => {
@@ -183,12 +215,27 @@ const App: React.FC = () => {
         )}
 
         {view === PortalView.ADMIN && (
-          <AdminDashboard 
-            config={invitationConfig} 
-            onUpdate={setInvitationConfig} 
-            onBack={() => handlePortalSwitch(PortalView.LANDING)}
-            onCreateNew={handleCreateNew}
-          />
+          authLoading ? (
+            <div className="flex flex-col items-center justify-center p-12">
+              <svg className="animate-spin h-8 w-8 text-indigo-500 mb-4" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <p className="text-sm text-slate-400 font-medium animate-pulse">Memverifikasi Sesi...</p>
+            </div>
+          ) : !user ? (
+            <AdminLogin 
+              onBack={() => handlePortalSwitch(PortalView.LANDING)} 
+              onSuccess={() => {}} 
+            />
+          ) : (
+            <AdminDashboard 
+              config={invitationConfig} 
+              onUpdate={setInvitationConfig} 
+              onBack={() => handlePortalSwitch(PortalView.LANDING)}
+              onCreateNew={handleCreateNew}
+            />
+          )
         )}
 
         {view === PortalView.INVITATION && (

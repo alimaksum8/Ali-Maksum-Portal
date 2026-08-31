@@ -1,0 +1,60 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions for validating fields
+    function isValidConfig(data) {
+      return data.id is string
+        && data.line1 is string
+        && data.line2 is string
+        && data.line3 is string
+        && data.line4 is string
+        && data.showMuballigh is bool
+        && data.muballighs is list
+        && data.eventDateIso is string
+        && data.eventDateDisplay is string
+        && data.eventTime is string
+        && data.venueName is string
+        && data.venueAddress is string
+        && data.message is string;
+    }
+
+    function isValidRsvp(data) {
+      return data.id is string
+        && data.eventId is string
+        && data.name is string
+        && data.count is int
+        && data.status is string
+        && data.status in ['yes', 'no', 'maybe']
+        && data.timestamp is int;
+    }
+
+    // Configs Collection (Draf Konfigurasi Undangan Utama)
+    match /configs/{document} {
+      allow read: if true;
+      // Hanya admin terotentikasi yang boleh memperbarui konfigurasi draf
+      allow write: if request.auth != null && (request.resource.data == null || isValidConfig(request.resource.data));
+    }
+
+    // RSVPs Collection (Konfirmasi Kehadiran Tamu)
+    match /rsvps/{rsvpId} {
+      // Membolehkan tamu membaca daftar RSVP untuk event tertentu agar konfirmasi realtime sinkron
+      allow read: if true;
+      
+      // Membolehkan pembuatan RSVP baru (atau update oleh tamu jika data valid)
+      allow create, update: if isValidRsvp(request.resource.data);
+      
+      // Hanya administrator terotentikasi yang dapat menghapus rsvp tamu (Reset)
+      allow delete: if request.auth != null;
+    }
+
+    // History Collection (Arsip Publikasi Undangan Resmi)
+    match /history/{historyId} {
+      // Tamu perlu membaca arsip ketika mengakses link spesifik (?d=...) atau memuat history
+      allow read: if true;
+      
+      // Hanya administrator terotentikasi yang boleh mempublikasikan atau menghapus arsip
+      allow write: if request.auth != null && (request.resource.data == null || isValidConfig(request.resource.data));
+    }
+  }
+}

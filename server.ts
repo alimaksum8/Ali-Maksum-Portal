@@ -9,18 +9,24 @@ async function startServer() {
 
   app.use(express.json());
 
+  const greetingCache: Record<string, { text: string; timestamp: number }> = {};
+  const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
+
   // API route for generating welcoming greetings securely using Gemini
   app.post("/api/greeting", async (req, res) => {
     const { role } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
+    // Check cache first
+    if (greetingCache[role] && (Date.now() - greetingCache[role].timestamp < CACHE_TTL)) {
+      return res.json({ greeting: greetingCache[role].text });
+    }
+
     if (!apiKey || apiKey.trim() === "") {
-      console.warn("GEMINI_API_KEY is not configured.");
-      return res.json({
-        greeting: role === 'admin'
-          ? "Selamat datang di panel kendali Darul Huda Portal. Siap mengelola hari bahagia Anda?"
-          : "Selamat datang! Suatu kehormatan bagi kami atas kunjungan Anda di portal undangan ini."
-      });
+      const fallback = role === 'admin'
+        ? "Selamat datang di panel kendali Darul Huda Portal. Siap mengelola hari bahagia Anda?"
+        : "Selamat datang! Suatu kehormatan bagi kami atas kunjungan Anda di portal undangan ini.";
+      return res.json({ greeting: fallback });
     }
 
     try {
@@ -34,9 +40,9 @@ async function startServer() {
         }
       });
 
-      // Call Gemini 3.7 Flash for Indonesian greeting generation
+      // Call Gemini for Indonesian greeting generation
       const response = await ai.models.generateContent({
-        model: 'gemini-3.7-flash',
+        model: 'gemini-3.5-flash',
         contents: `Generate a short, sophisticated, and welcoming one-sentence greeting in Indonesian for a user entering the ${role} section of a premium digital portal called 'Darul Huda Portal'. Keep it professional yet warm and poetic.`,
         config: {
           temperature: 0.8,
@@ -45,14 +51,24 @@ async function startServer() {
       });
 
       const greeting = response.text?.trim() || `Selamat datang di portal ${role}.`;
+      
+      // Store in cache
+      greetingCache[role] = { text: greeting, timestamp: Date.now() };
+      
       res.json({ greeting });
-    } catch (error) {
-      console.error("Gemini server-side greeting error:", error);
-      res.json({
-        greeting: role === 'admin'
-          ? "Sistem siap. Selamat bekerja di panel admin."
-          : "Terima kasih telah berkunjung ke undangan kami."
-      });
+    } catch (error: any) {
+      // Graceful fallback without noisy logs for quota issues
+      const isQuotaError = error?.message?.includes("quota") || error?.message?.includes("429");
+      
+      if (!isQuotaError) {
+        console.error("Gemini API error:", error);
+      }
+
+      const fallback = role === 'admin'
+        ? "Sistem siap. Selamat bekerja di panel admin."
+        : "Terima kasih telah berkunjung ke undangan kami.";
+      
+      res.json({ greeting: fallback });
     }
   });
 

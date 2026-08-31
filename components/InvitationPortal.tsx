@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { InvitationConfig, RSVP } from '../types';
+import { db, collection, onSnapshot, query, setDoc, doc, orderBy } from '../services/firebaseService';
+import { where } from 'firebase/firestore';
 
 interface InvitationPortalProps {
   config: InvitationConfig;
@@ -15,10 +17,36 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   const [isExpired, setIsExpired] = useState(false);
   const [allRsvps, setAllRsvps] = useState<RSVP[]>([]);
 
+  // Mengambil daftar RSVP secara realtime dari Firestore untuk Event ini
   useEffect(() => {
-    const saved = localStorage.getItem('darul_huda_rsvps');
-    if (saved) setAllRsvps(JSON.parse(saved));
-  }, []);
+    if (!config.id) return;
+
+    const rsvpsQuery = query(
+      collection(db, 'rsvps'),
+      where('eventId', '==', config.id)
+    );
+
+    const unsubscribe = onSnapshot(rsvpsQuery, (snapshot) => {
+      const loadedRsvps: RSVP[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedRsvps.push({
+          id: data.id,
+          name: data.name,
+          count: data.count,
+          status: data.status,
+          timestamp: data.timestamp
+        });
+      });
+      // Urutkan berdasarkan timestamp desc secara lokal untuk menghindari kebutuhan index composite Firestore
+      loadedRsvps.sort((a, b) => b.timestamp - a.timestamp);
+      setAllRsvps(loadedRsvps);
+    }, (err) => {
+      console.error("Gagal memuat RSVP dari Firestore secara realtime:", err);
+    });
+
+    return () => unsubscribe();
+  }, [config.id]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -60,20 +88,26 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
     return () => clearInterval(timer);
   }, [config.eventDateIso]);
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (isExpired) return;
     const status = attendanceStatus || 'no';
-    const newRsvp: RSVP = {
-      id: Date.now().toString(),
+    const rsvpId = Date.now().toString();
+    const newRsvp = {
+      id: rsvpId,
+      eventId: config.id,
       name: guestName.trim() || (status === 'no' ? 'Seseorang' : 'Tamu Tanpa Nama'),
       count: status === 'yes' ? guestCount : 0,
       status: status,
       timestamp: new Date().toISOString()
     };
-    const updatedRsvps = [newRsvp, ...allRsvps];
-    setAllRsvps(updatedRsvps);
-    localStorage.setItem('darul_huda_rsvps', JSON.stringify(updatedRsvps));
-    setIsSuccess(true);
+
+    try {
+      await setDoc(doc(db, 'rsvps', `${config.id}_${rsvpId}`), newRsvp);
+      setIsSuccess(true);
+    } catch (err) {
+      console.error("Gagal mengirim RSVP ke Firestore:", err);
+      alert("Gagal mengirim RSVP. Silakan coba lagi.");
+    }
   };
 
   const totalConfirmedPeople = allRsvps.filter(r => r.status === 'yes').reduce((sum, r) => sum + r.count, 0);

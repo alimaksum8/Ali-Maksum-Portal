@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { InvitationConfig, RSVP } from '../types';
+import { db, collection, onSnapshot, query, setDoc, doc, orderBy, auth, signOut } from '../services/firebaseService';
+import { where, deleteDoc } from 'firebase/firestore';
 
 interface AdminDashboardProps {
   config: InvitationConfig;
@@ -15,12 +17,55 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   const [guestList, setGuestList] = useState<RSVP[]>([]);
   const [publishedHistory, setPublishedHistory] = useState<InvitationConfig[]>([]);
 
+  // 1. Memuat RSVP secara realtime dari Firestore untuk Event saat ini
   useEffect(() => {
-    const savedGuests = localStorage.getItem('darul_huda_rsvps');
-    if (savedGuests) setGuestList(JSON.parse(savedGuests));
+    if (!config.id) return;
 
-    const savedHistory = localStorage.getItem('darul_huda_history');
-    if (savedHistory) setPublishedHistory(JSON.parse(savedHistory));
+    const rsvpsQuery = query(
+      collection(db, 'rsvps'),
+      where('eventId', '==', config.id)
+    );
+
+    const unsubscribe = onSnapshot(rsvpsQuery, (snapshot) => {
+      const loadedRsvps: RSVP[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        loadedRsvps.push({
+          id: data.id,
+          name: data.name,
+          count: data.count,
+          status: data.status,
+          timestamp: data.timestamp
+        });
+      });
+      // Urutkan berdasarkan timestamp desc secara lokal untuk menghindari kebutuhan index composite Firestore
+      loadedRsvps.sort((a, b) => b.timestamp - a.timestamp);
+      setGuestList(loadedRsvps);
+    }, (err) => {
+      console.error("Gagal memuat RSVP dari Firestore secara realtime:", err);
+    });
+
+    return () => unsubscribe();
+  }, [config.id]);
+
+  // 2. Memuat Arsip Publikasi secara realtime dari Firestore
+  useEffect(() => {
+    const historyQuery = query(
+      collection(db, 'history'),
+      orderBy('id', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(historyQuery, (snapshot) => {
+      const loadedHistory: InvitationConfig[] = [];
+      snapshot.forEach((doc) => {
+        loadedHistory.push(doc.data() as InvitationConfig);
+      });
+      setPublishedHistory(loadedHistory);
+    }, (err) => {
+      console.error("Gagal memuat arsip dari Firestore secara realtime:", err);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -96,19 +141,17 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
 
   const handlePublish = async () => {
     setIsPublishing(true);
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const history = [...publishedHistory];
-    const existingIndex = history.findIndex(h => h.id === config.id);
-    if (existingIndex > -1) history[existingIndex] = { ...config };
-    else history.unshift({ ...config });
-    
-    setPublishedHistory(history);
-    localStorage.setItem('darul_huda_history', JSON.stringify(history));
-
-    const success = await handleCopyLink(config);
-    setIsPublishing(false);
-    if (success) alert('Undangan berhasil dipublikasikan & Link Unik disalin!');
+    try {
+      // Simpan draf ke arsip publikasi di Firestore
+      await setDoc(doc(db, 'history', config.id), config);
+      const success = await handleCopyLink(config);
+      if (success) alert('Undangan berhasil dipublikasikan & Link Unik disalin!');
+    } catch (err) {
+      console.error("Gagal memublikasikan undangan ke Firestore:", err);
+      alert("Gagal memublikasikan undangan.");
+    } finally {
+      setIsPublishing(false);
+    }
   };
 
   const handleUpdateFromHistory = (item: InvitationConfig) => {
@@ -118,11 +161,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
     }
   };
 
-  const handleDeleteFromHistory = (id: string) => {
+  const handleDeleteFromHistory = async (id: string) => {
     if (confirm('Hapus undangan ini dari arsip?')) {
-      const filtered = publishedHistory.filter(h => h.id !== id);
-      setPublishedHistory(filtered);
-      localStorage.setItem('darul_huda_history', JSON.stringify(filtered));
+      try {
+        await deleteDoc(doc(db, 'history', id));
+      } catch (err) {
+        console.error("Gagal menghapus dari Firestore:", err);
+      }
+    }
+  };
+
+  const handleResetRSVPs = async () => {
+    if (confirm('Reset seluruh konfirmasi tamu untuk acara ini?')) {
+      try {
+        for (const guest of guestList) {
+          await deleteDoc(doc(db, 'rsvps', `${config.id}_${guest.id}`));
+        }
+      } catch (err) {
+        console.error("Gagal mereset konfirmasi tamu dari Firestore:", err);
+      }
     }
   };
 
@@ -134,7 +191,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-6">
           <div>
             <h2 className="text-4xl font-extrabold text-white tracking-tight">Editor Undangan</h2>
-            <p className="text-indigo-400 mt-1 font-medium">Data tersimpan otomatis sebagai draft lokal.</p>
+            <p className="text-indigo-400 mt-1 font-medium">Data disinkronkan realtime dengan Firestore.</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <button onClick={onCreateNew} className="px-6 py-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all font-bold flex items-center gap-2 group">
@@ -142,6 +199,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
               Acara Baru
             </button>
             <button onClick={onBack} className="px-6 py-3 rounded-2xl glass-panel border-white/10 hover:bg-white hover:text-slate-950 transition-all font-bold"> Kembali </button>
+            <button onClick={async () => { if (confirm('Anda yakin ingin keluar dari panel admin?')) { await signOut(auth); onBack(); } }} className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all font-bold flex items-center gap-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+              </svg>
+              Keluar
+            </button>
           </div>
         </div>
 
@@ -205,7 +268,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <section className="bg-white/5 p-6 rounded-3xl border border-white/10 overflow-hidden flex flex-col max-h-[400px]">
               <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-bold text-white">Konfirmasi Tamu ({totalPeople})</h3>
-                <button onClick={() => { if(confirm('Reset?')) { localStorage.removeItem('darul_huda_rsvps'); setGuestList([]); } }} className="text-[10px] text-rose-500 font-bold">Reset</button>
+                <button onClick={handleResetRSVPs} className="text-[10px] text-rose-500 font-bold">Reset</button>
               </div>
               <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
                 {guestList.map(g => (

@@ -16,7 +16,7 @@ export const generatePortalGreeting = async (role: 'admin' | 'guest'): Promise<s
     const data = await response.json();
     return data.greeting;
   } catch (error) {
-    console.error("Gagal mengambil ucapan selamat datang dari server:", error);
+    console.warn("Ucapan selamat datang dialihkan ke default lokal:", error);
     return role === 'admin'
       ? "Sistem siap. Selamat bekerja di panel admin."
       : "Terima kasih telah berkunjung ke undangan kami.";
