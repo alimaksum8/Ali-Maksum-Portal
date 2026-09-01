@@ -19,22 +19,23 @@ const App: React.FC = () => {
 
   // Initial State Default
   const defaultConfig: InvitationConfig = {
-    id: "default-event-2025",
-    line1: "Maulid Nabi Muhammad Saw",
-    line2: "Haul Masyayikh Pon-Pes Darul Huda",
-    line3: "IKSADAH",
-    line4: "Ikatan Alumni Santri Darul Huda",
-    showMuballigh: true,
-    muballighs: ["KH. Abdurrahman Wahid", "KH. Maimun Zubair"],
-    eventDateIso: "2025-05-12T19:30",
-    eventDateDisplay: "Senin, 12 Mei 2025",
-    eventTime: "19:30 WIB - Selesai",
-    venueName: "Halaman Utama Pon-Pes Darul Huda",
-    venueAddress: "Jl. Pengarang No. 12, Jawa Timur",
-    message: "Kami mengharap kehadiran Bapak/Ibu/Saudara/i dalam acara tahunan kami sebagai bentuk syukur dan mempererat tali silaturahmi."
+    id: "default-event",
+    line1: "",
+    line2: "",
+    line3: "",
+    line4: "",
+    showMuballigh: false,
+    muballighs: [""],
+    eventDateIso: "",
+    eventDateDisplay: "",
+    eventTime: "",
+    venueName: "",
+    venueAddress: "",
+    message: ""
   };
 
   const [invitationConfig, setInvitationConfig] = useState<InvitationConfig>(defaultConfig);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   // 1. Load data saat pertama kali mount & Sinkronisasi Realtime dengan Firestore
   useEffect(() => {
@@ -61,6 +62,7 @@ const App: React.FC = () => {
         const decodedData = JSON.parse(decodedString);
         setInvitationConfig(decodedData);
         setView(PortalView.INVITATION);
+        setIsLoaded(true);
         return; 
       } catch (e) {
         console.error("Gagal mendekode data undangan dari link:", e);
@@ -78,8 +80,10 @@ const App: React.FC = () => {
           return prev;
         });
       }
+      setIsLoaded(true);
     }, (err) => {
       console.error("Gagal mengambil data dari Firestore:", err);
+      setIsLoaded(true);
     });
 
     if (viewParam === 'invitation') setView(PortalView.INVITATION);
@@ -93,6 +97,8 @@ const App: React.FC = () => {
 
   // 2. Kirim perubahan draf ke Firestore secara otomatis dengan Debounce 1 Detik
   useEffect(() => {
+    if (!isLoaded) return;
+
     const timer = setTimeout(() => {
       const urlParams = new URLSearchParams(window.location.search);
       // Jangan timpa draf di Firestore jika sedang melihat link spesifik tamu (?d=...)
@@ -103,7 +109,7 @@ const App: React.FC = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [invitationConfig]);
+  }, [invitationConfig, isLoaded]);
 
   const handleCreateNew = () => {
     if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {

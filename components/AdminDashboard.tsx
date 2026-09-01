@@ -16,6 +16,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
   const [copySuccess, setCopySuccess] = useState(false);
   const [guestList, setGuestList] = useState<RSVP[]>([]);
   const [publishedHistory, setPublishedHistory] = useState<InvitationConfig[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+
+  const handleSaveDraft = async () => {
+    setIsSaving(true);
+    try {
+      await setDoc(doc(db, "configs", "current"), config);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (err: any) {
+      console.error("Gagal menyimpan draf ke Firestore:", err);
+      alert("Gagal menyimpan draf ke Firestore: " + err.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   // 1. Memuat RSVP secara realtime dari Firestore untuk Event saat ini
   useEffect(() => {
@@ -197,6 +213,28 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
             <button onClick={onCreateNew} className="px-6 py-3 rounded-2xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 hover:bg-indigo-600 hover:text-white transition-all font-bold flex items-center gap-2 group">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="group-hover:rotate-90 transition-transform"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Acara Baru
+            </button>
+            <button 
+              onClick={handleSaveDraft} 
+              disabled={isSaving}
+              className={`px-6 py-3 rounded-2xl font-bold flex items-center gap-2 transition-all shadow-md ${
+                saveSuccess 
+                  ? 'bg-emerald-600/25 border border-emerald-500/50 text-emerald-300 hover:bg-emerald-600 hover:text-white' 
+                  : 'bg-indigo-600 border border-indigo-500 hover:bg-indigo-500 text-white'
+              }`}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isSaving ? 'animate-spin' : ''}>
+                {saveSuccess ? (
+                  <polyline points="20 6 9 17 4 12" />
+                ) : (
+                  <>
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                  </>
+                )}
+              </svg>
+              {isSaving ? "Menyimpan..." : saveSuccess ? "Tersimpan!" : "Simpan Draf"}
             </button>
             <button onClick={onBack} className="px-6 py-3 rounded-2xl glass-panel border-white/10 hover:bg-white hover:text-slate-950 transition-all font-bold"> Kembali </button>
             <button onClick={async () => { if (confirm('Anda yakin ingin keluar dari panel admin?')) { await signOut(auth); onBack(); } }} className="px-6 py-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 hover:bg-rose-600 hover:text-white transition-all font-bold flex items-center gap-2">
