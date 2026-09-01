@@ -97,7 +97,7 @@ const App: React.FC = () => {
 
   // 2. Kirim perubahan draf ke Firestore secara otomatis dengan Debounce 1 Detik
   useEffect(() => {
-    if (!isLoaded) return;
+    if (!isLoaded || !user) return;
 
     const timer = setTimeout(() => {
       const urlParams = new URLSearchParams(window.location.search);
@@ -109,7 +109,7 @@ const App: React.FC = () => {
     }, 1000);
 
     return () => clearTimeout(timer);
-  }, [invitationConfig, isLoaded]);
+  }, [invitationConfig, isLoaded, user]);
 
   const handleCreateNew = () => {
     if (confirm('Mulai buat undangan baru? Seluruh data saat ini akan dikosongkan.')) {

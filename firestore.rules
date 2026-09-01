@@ -26,6 +26,7 @@ service cloud.firestore {
         && data.count is int
         && data.status is string
         && data.status in ['yes', 'no', 'maybe']
+        && data.comment is string
         && data.timestamp is int;
     }
 

@@ -12,6 +12,7 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
   const [attendanceStatus, setAttendanceStatus] = useState<'yes' | 'no' | null>(null);
   const [guestName, setGuestName] = useState('');
   const [guestCount, setGuestCount] = useState(1);
+  const [guestComment, setGuestComment] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00', seconds: '00' });
   const [isExpired, setIsExpired] = useState(false);
@@ -98,7 +99,8 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
       name: guestName.trim() || (status === 'no' ? 'Seseorang' : 'Tamu Tanpa Nama'),
       count: status === 'yes' ? guestCount : 0,
       status: status,
-      timestamp: new Date().toISOString()
+      comment: guestComment.trim(),
+      timestamp: Date.now()
     };
 
     try {
@@ -194,6 +196,13 @@ export const InvitationPortal: React.FC<InvitationPortalProps> = ({ config }) =>
                         <button onClick={() => setGuestCount(guestCount + 1)} className="w-8 h-8 rounded-lg bg-white/10 text-yellow-500">+</button>
                       </div>
                     </div>
+                    <textarea 
+                      placeholder="Ucapan atau Doa (Opsional)..." 
+                      value={guestComment} 
+                      onChange={(e) => setGuestComment(e.target.value)} 
+                      rows={3}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white outline-none focus:border-yellow-500/50 resize-none"
+                    />
                     <button onClick={handleConfirm} className="w-full py-4 rounded-full font-bold text-slate-950 animate-pulse-glow bg-gradient-to-r from-yellow-600 to-yellow-300">Kirim Konfirmasi</button>
                   </div>
                 )}

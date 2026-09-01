@@ -7,10 +7,12 @@ export enum PortalView {
 
 export interface RSVP {
   id: string;
+  eventId: string;
   name: string;
   count: number;
   status: 'yes' | 'no';
-  timestamp: string;
+  comment: string;
+  timestamp: number;
 }
 
 export interface InvitationConfig {

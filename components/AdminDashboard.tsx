@@ -310,9 +310,21 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ config, onUpdate
               </div>
               <div className="flex-1 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
                 {guestList.map(g => (
-                  <div key={g.id} className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                    <div><p className="text-sm font-bold text-white">{g.name}</p><p className="text-[10px] text-slate-500">{new Date(g.timestamp).toLocaleString()}</p></div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${g.status === 'yes' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{g.status === 'yes' ? `Hadir +${g.count}` : 'Tidak'}</span>
+                  <div key={g.id} className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-bold text-white">{g.name}</p>
+                        <p className="text-[10px] text-slate-500">{new Date(g.timestamp).toLocaleString('id-ID')}</p>
+                      </div>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase ${g.status === 'yes' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
+                        {g.status === 'yes' ? `Hadir +${g.count}` : 'Tidak'}
+                      </span>
+                    </div>
+                    {g.comment && (
+                      <div className="pt-2 border-t border-white/5">
+                        <p className="text-[10px] text-slate-400 italic leading-relaxed">"{g.comment}"</p>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
